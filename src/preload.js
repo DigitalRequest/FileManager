@@ -5,17 +5,22 @@ const fs = require('fs');
 window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('get-dir', 'arg');
     ipcRenderer.on('dir', (event, dir) => {
-        let dir_name = dir.split("\\");
-
-        let list = document.getElementById("list-test");
+        const body = document.querySelector('body');
+        const filesField = document.getElementsByClassName('fe-files');
+        var dir_name = dir.split("\\");
         dir_name = dir_name[dir_name.length - 1];
-        document.getElementById('dirNameTest').textContent = dir_name;
 
-        updateList(dir, list);
-        list.addEventListener('click', (event) => {
+        document.getElementById('dirNameTest').textContent = dir_name;
+        document.getElementById('dirNameTest').id = dir_name;
+
+        body.addEventListener('click', (event) => {
             const target = event.target;
             if (target.classList.contains('folder')) {
-                const folderName = target.childNodes[0].textContent;
+                var folderName;
+                if (target.hasChildNodes())
+                    var folderName = target.childNodes[0].textContent;
+                else
+                    var folderName = target.textContent;
                 const folderAt = document.getElementById(folderName);
                 const parentDir = path.dirname(dir);
                 const dirPaths = dir.split('\\');
@@ -37,8 +42,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 else {
                     ipcRenderer.send('folder-clicked-collapse', dir);
                 }
+
+                removeFiles(filesField[0]);
+                createFiles(dir, filesField[0]);
             }
         });
+
     });
 
     ipcRenderer.on('add-folders-list', (event, folder_dir) => {
@@ -51,13 +60,12 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.on('collapse-folders-list', (event, folder_dir) => {
-        console.log(folder_dir);
         var folder_name = folder_dir.split("\\");
         folder_name = folder_name[folder_name.length - 1];
 
         let folder_document = document.getElementById(folder_name);
 
-        collapseList(folder_dir, folder_document);
+        collapseList(folder_document);
     });
 });
 
@@ -78,8 +86,26 @@ function updateList(dir, div) {
     div.appendChild(ul);
 }
 
-function collapseList(dir, div) {
+function collapseList(div) {
+    console.log(div);
     while (div.childNodes[1]) {
         div.childNodes[1].remove();
     }
+}
+
+function createFiles(dir, fileField) {
+    fs.readdirSync(dir).forEach((file) => {
+        let fileDiv = document.createElement('div');
+        fileDiv.setAttribute('class', 'file-body');
+        fileDiv.setAttribute('id', file.toString());
+
+        fileField.appendChild(fileDiv);
+    });
+}
+
+function removeFiles(fileField) {
+    let div = fileField.querySelectorAll('.file-body');
+    div.forEach(file => {
+        file.remove();
+    });
 }

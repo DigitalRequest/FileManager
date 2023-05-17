@@ -19,7 +19,7 @@ const createWindow = () => {
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  var direc = "C:\\Users\\Genesect\\Desktop";
+  var direc = "C:\\Users\\Genesect";
 
   ipcMain.on('get-dir', (event, arg) => {
     event.reply('dir', direc);
