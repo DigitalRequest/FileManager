@@ -24,6 +24,15 @@ const createWindow = () => {
   ipcMain.on('get-dir', (event, arg) => {
     event.reply('dir', direc);
   });
+  
+  ipcMain.on('folder-clicked-show', (event, arg) => {
+    event.reply('add-folders-list', arg);
+  });
+  ipcMain.on('folder-clicked-collapse', (event, arg) => {
+    console.log("Collape");
+    event.reply('collapse-folders-list', arg);
+  });
+
   mainWindow.webContents.openDevTools();
 };
 
