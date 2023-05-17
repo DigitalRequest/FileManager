@@ -98,6 +98,12 @@ function createFiles(dir, fileField) {
         let fileDiv = document.createElement('div');
         fileDiv.setAttribute('class', 'file-body');
         fileDiv.setAttribute('id', file.toString());
+        if (file.length < 10) {
+            fileDiv.textContent = file.toLowerCase();
+        }
+        else {
+            fileDiv.textContent = file.slice(0, 9).toLowerCase() + "...";
+        }
 
         fileField.appendChild(fileDiv);
     });

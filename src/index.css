@@ -59,6 +59,9 @@ body {
   margin: 3%;
   width: 13%;
   height: 16%;
+  display: flex;
   border-radius: 2px;
-  background-color: rgb(101, 165, 42);
+  align-items: flex-end;
+  justify-content: center;
+  background-color: rgba(250, 250, 250, 0.5);
 }
