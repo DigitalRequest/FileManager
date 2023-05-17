@@ -18,7 +18,7 @@ body {
   border-right: solid rgb(211, 211, 211) 1px;
   position: relative;
   height: 100%;
-  width: 20%;
+  width: 40%;
 }
 
 .fe-body .dropdown-list:first-child {

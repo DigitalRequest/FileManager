@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const path = require('path');
 const fs = require('fs');
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -14,14 +15,27 @@ window.addEventListener('DOMContentLoaded', () => {
         list.addEventListener('click', (event) => {
             const target = event.target;
             if (target.classList.contains('folder')) {
-                let folder_path = dir + "\\" + target.childNodes[0].textContent;
-                let folder_at = document.getElementById(target.childNodes[0].textContent);
+                const folderName = target.childNodes[0].textContent;
+                const folderAt = document.getElementById(folderName);
+                const parentDir = path.dirname(dir);
+                const dirPaths = dir.split('\\');
 
-                if (folder_at.childNodes.length < 2) {
-                    ipcRenderer.send('folder-clicked-show', folder_path);
+                if (folderName != path.basename(dir)) {
+                    dir = path.join(dir, folderName);
+                }
+                if (dirPaths.includes(folderName)) {
+                    let index = dirPaths.indexOf(folderName);
+                    dir = dirPaths.slice(0, index + 1).join('\\');
+                }
+                if (fs.readdirSync(parentDir).includes(folderName)) {
+                    dir = path.join(parentDir, folderName);
+                }
+
+                if (folderAt.childNodes.length < 2) {
+                    ipcRenderer.send('folder-clicked-show', dir);
                 }
                 else {
-                    ipcRenderer.send('folder-clicked-collapse', folder_path);
+                    ipcRenderer.send('folder-clicked-collapse', dir);
                 }
             }
         });
@@ -35,7 +49,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         updateList(folder_dir, folder_document);
     });
-    
+
     ipcRenderer.on('collapse-folders-list', (event, folder_dir) => {
         console.log(folder_dir);
         var folder_name = folder_dir.split("\\");
@@ -65,9 +79,7 @@ function updateList(dir, div) {
 }
 
 function collapseList(dir, div) {
-    console.log(div.childNodes[1]);
-    while (div.childNodes[1])
-    {
+    while (div.childNodes[1]) {
         div.childNodes[1].remove();
     }
 }

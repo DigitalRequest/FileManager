@@ -29,7 +29,6 @@ const createWindow = () => {
     event.reply('add-folders-list', arg);
   });
   ipcMain.on('folder-clicked-collapse', (event, arg) => {
-    console.log("Collape");
     event.reply('collapse-folders-list', arg);
   });
 
