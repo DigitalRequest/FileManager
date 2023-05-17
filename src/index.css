@@ -16,7 +16,7 @@ body {
   background-color: rgb(196, 226, 252);
   position: relative;
   height: 100%;
-  width: 15%;
+  width: 20%;
 }
 
 .fe-body .dropdown-list:first-child {
@@ -28,8 +28,8 @@ body {
   cursor: pointer;
 }
 .fe-body .dropdown-list ul {
-  list-style: circle;
-  margin-left: 15%;
+  list-style: none;
+  margin-left: 5%;
 }
 .fe-body .dropdown-list ul li {
   cursor: pointer;

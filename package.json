@@ -6,7 +6,7 @@
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
-    "start": "electron-forge start",
+    "start": "electron .",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
@@ -19,6 +19,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@npmcli/fs": "^3.1.0",
     "electron-reload": "^2.0.0-alpha.1",
     "electron-squirrel-startup": "^1.0.0"
   },
@@ -29,5 +30,10 @@
     "@electron-forge/maker-squirrel": "^6.1.1",
     "@electron-forge/maker-zip": "^6.1.1",
     "electron": "24.3.0"
+  },
+  "browser": {
+    "fs": false,
+    "os": false,
+    "path": false
   }
 }
