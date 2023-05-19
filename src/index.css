@@ -66,3 +66,14 @@ body {
   justify-content: center;
   background-size: 100% 100%;
 }
+.file-body-f {
+  margin: 3%;
+  width: 13%;
+  height: 16%;
+  display: flex;
+  cursor: pointer;
+  border-radius: 2px;
+  align-items: flex-end;
+  justify-content: center;
+  background-size: 100% 100%;
+}

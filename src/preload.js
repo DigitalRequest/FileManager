@@ -24,20 +24,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
         body.addEventListener('click', (event) => {
             const target = event.target;
-            if (target.classList.contains('folder')) {
+            if (target.classList.contains('folder') || target.classList.contains('file-body-f')) {
 
+                // Delete the keys for dictionary if too large
                 if (Object.keys(foldersOpened).length > 30) {
                     delete foldersOpened[Object.keys(foldersOpened)[0]];
                 }
-                var folderName;
-                if (target.hasChildNodes())
-                    var folderName = target.childNodes[0].textContent;
-                else
-                    var folderName = target.textContent;
+
+                // Get folder name
+                var folderName = target.id;
+                console.log(target.id);
                 const folderAt = document.getElementById(folderName);
                 const folderIndex = folderAt.getAttribute('index');
                 const clickedFolder = path.join(dir, folderName);
 
+
+                // Set the new directory at
                 if (fs.existsSync(clickedFolder)) {
                     dir = clickedFolder;
                 }
@@ -51,6 +53,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     })
                 }
 
+                // Create a key for the directories inside the current directory
                 fs.readdirSync(dir).forEach((elm) => {
                     if (!foldersOpened.hasOwnProperty(dir))
                         foldersOpened[dir] = [];
@@ -59,7 +62,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-
+                // Send a message to collapse or show the new directories inside
                 if (folderAt.childNodes.length < 2) {
                     ipcRenderer.send('folder-clicked-show', dir);
                 }
@@ -67,6 +70,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     ipcRenderer.send('folder-clicked-collapse', dir);
                 }
 
+                // Remove files at the files field
                 removeFiles(filesField[0]);
                 createFiles(dir, filesField[0]);
             }
@@ -138,20 +142,24 @@ function collapseList(div) {
 function createFiles(dir, fileField) {
     fs.readdirSync(dir).forEach((file) => {
         const filePath = path.join(dir, file);
+        const fileIndex = filePath.split("\\").length - 1;
         const fileDiv = document.createElement('div');
 
-        fileDiv.setAttribute('class', 'file-body');
+        fileDiv.setAttribute('class', 'file-body-f');
         fileDiv.setAttribute('id', file.toString());
+        if (fs.lstatSync(filePath).isDirectory()) {
+            fileDiv.setAttribute('index', fileIndex);
+        }
         if (fs.lstatSync(filePath).isDirectory())
             fileDiv.style.backgroundImage = `url('${folderSingle}')`;
         else if (file.endsWith('.txt') || file.endsWith('.rts'))
             fileDiv.style.backgroundImage = `url('${textFile}')`;
 
         if (file.length < 10) {
-            fileDiv.textContent = file.toLowerCase();
+            fileDiv.textContent = file;
         }
         else {
-            fileDiv.textContent = file.slice(0, 9).toLowerCase() + "...";
+            fileDiv.textContent = file.slice(0, 9) + "...";
         }
 
         fileField.appendChild(fileDiv);
@@ -159,7 +167,7 @@ function createFiles(dir, fileField) {
 }
 
 function removeFiles(fileField) {
-    let div = fileField.querySelectorAll('.file-body');
+    let div = fileField.querySelectorAll('.file-body-f');
     div.forEach(file => {
         file.remove();
     });
