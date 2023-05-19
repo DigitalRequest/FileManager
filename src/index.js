@@ -24,7 +24,10 @@ const createWindow = () => {
   ipcMain.on('get-dir', (event, arg) => {
     event.reply('dir', direc);
   });
-  
+  ipcMain.on('get-file', (event, arg) => {
+    event.reply('file', arg);
+  });
+
   ipcMain.on('folder-clicked-show', (event, arg) => {
     event.reply('add-folders-list', arg);
   });
