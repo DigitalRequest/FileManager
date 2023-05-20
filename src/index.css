@@ -39,6 +39,7 @@ body {
   background: none;
   margin-left: 1%;
   padding: 0.1%;
+  padding-left: 0.3%;
   width: 50%;
 }
 
@@ -54,7 +55,7 @@ body {
 
 .workingEnviroment {
   display: flex;
-  height: 100%;
+  height: calc(100% - 7%);
   width: 100%;
 }
 
@@ -93,11 +94,12 @@ body {
   height: 100%;
   display: flex;
   flex-wrap: wrap;
+  overflow-y: auto;
   position: relative;
-  overflow-y: scroll;
+  box-sizing: border-box;
   align-items: flex-start;
-  justify-content: flex-start;
   align-content: flex-start;
+  justify-content: flex-start;
   background-color: rgb(20, 21, 22);
 }
 
@@ -125,7 +127,7 @@ body {
   border-radius: 2px;
   align-items: flex-end;
   justify-content: center;
-  background-size: 75% 75%;
+  background-size: 70% 70%;
   background-position: center;
   background-repeat: no-repeat;
   border: solid transparent 1px;

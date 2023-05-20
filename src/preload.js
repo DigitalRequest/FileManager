@@ -5,6 +5,9 @@ const fs = require('fs');
 const iconsFolder = path.join(__dirname, '..', 'assets', 'Icons');
 const folderSingle = path.join(iconsFolder, 'FolderSingle.svg').replace(/\\/g, '/');
 const textFile = path.join(iconsFolder, 'txt-file.svg').replace(/\\/g, '/');
+const imageFile = path.join(iconsFolder, 'ImageFile.svg').replace(/\\/g, '/');
+const soundFile = path.join(iconsFolder, 'MusicFile.svg').replace(/\\/g, '/');
+const otherFiles = path.join(iconsFolder, 'OtherFiles.svg').replace(/\\/g, '/');
 
 var foldersOpened = {};
 var selectedFolder;
@@ -25,6 +28,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
         body.addEventListener('click', (event) => {
             const target = event.target;
+            if (target.classList.contains('buttonRoot')) {
+                dir = updateDirectory(dir_name, dir);
+
+                // Remove files at the files field
+                removeFiles(filesField[0]);
+                createFiles(dir, filesField[0]);
+
+                // Updates the navigation bar
+                updateNavigationBar(navigationBar, dir);
+            }
+            if (target.classList.contains('buttonBack')) {
+                dirLenght = dir.split('\\').length;
+                if (dirLenght > 2) {
+                    dirArray = dir.split('\\').slice(0, dirLenght - 1);
+                    dir = dirArray.join('\\');
+                } else {
+                    // TODO: Error page
+                }
+                console.log(dir);
+
+                // Remove files at the files field
+                removeFiles(filesField[0]);
+                createFiles(dir, filesField[0]);
+
+                // Updates the navigation bar
+                updateNavigationBar(navigationBar, dir);
+            }
             if (target.classList.contains('file-body-f')) {
                 if (target.classList.contains('clicked')) {
                     target.classList.remove('clicked');
@@ -60,23 +90,46 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 
         body.addEventListener('keypress', (event) => {
-            if (event.key == 'Enter' && selectedFolder != null) {
-                const folderAt = document.getElementById(path.basename(dir));
-                // Send a message to collapse or show the new directories inside
-                if (folderAt.childNodes.length < 2) {
-                    ipcRenderer.send('folder-clicked-show', dir);
-                }
-                else {
-                    ipcRenderer.send('folder-clicked-collapse', dir);
-                }
+            if (event.key == 'Enter') {
+                if (selectedFolder != null && document.activeElement != navigationBar) {
+                    const folderAt = document.getElementById(path.basename(dir));
+                    // Send a message to collapse or show the new directories inside
+                    if (folderAt.childNodes.length < 2) {
+                        ipcRenderer.send('folder-clicked-show', dir);
+                    }
+                    else {
+                        ipcRenderer.send('folder-clicked-collapse', dir);
+                    }
 
-                // Remove files at the files field
-                removeFiles(filesField[0]);
-                createFiles(dir, filesField[0]);
+                    // Remove files at the files field
+                    removeFiles(filesField[0]);
+                    createFiles(dir, filesField[0]);
 
-                // Updates the navigation bar
-                updateNavigationBar(navigationBar, dir);
-                selectedFolder = null;
+                    // Updates the navigation bar
+                    updateNavigationBar(navigationBar, dir);
+                    selectedFolder = null;
+                } else {
+                    if (fs.existsSync(navigationBar.value) && fs.lstatSync(navigationBar.value).isDirectory()) {
+                        dir = navigationBar.value;
+
+                        const folderAt = document.getElementById(path.basename(dir));
+                        // Send a message to collapse or show the new directories inside
+                        if (folderAt.childNodes.length < 2) {
+                            ipcRenderer.send('folder-clicked-show', dir);
+                        }
+                        else {
+                            ipcRenderer.send('folder-clicked-collapse', dir);
+                        }
+
+                        // Remove files at the files field
+                        removeFiles(filesField[0]);
+                        createFiles(dir, filesField[0]);
+
+                        // Updates the navigation bar
+                        updateNavigationBar(navigationBar, dir);
+                        selectedFolder = null;
+                    }
+                }
             }
         });
         body.addEventListener('mouseover', (event) => {
@@ -90,23 +143,6 @@ window.addEventListener('DOMContentLoaded', () => {
             if (target.classList.contains('file-body-f')) {
                 target.classList.remove('selected');
             }
-        });
-
-        ipcRenderer.send('get-file', 'arg');
-        ipcRenderer.on('file', (event, file) => {
-            const body = document.getElementsByClassName('fe-files');
-            body[0].addEventListener('click', (event) => {
-                const target = event.target;
-                if (target.classList.contains('file-body')) {
-                    const fileClicked = path.join(dir, target.id);
-                    if (fs.lstatSync(fileClicked).isDirectory()) {
-                        fs.opendir(fileClicked, { encoding: "utf8", bufferSize: 64 });
-                    } else {
-
-                    }
-                }
-            });
-
         });
     });
 
@@ -216,8 +252,14 @@ function createFiles(dir, fileField) {
         }
         if (fs.lstatSync(filePath).isDirectory())
             fileDiv.style.backgroundImage = `url('${folderSingle}')`;
-        else if (file.endsWith('.txt') || file.endsWith('.rts'))
+        else if (file.endsWith('.txt') || file.endsWith('.rtf'))
             fileDiv.style.backgroundImage = `url('${textFile}')`;
+        else if (file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg'))
+            fileDiv.style.backgroundImage = `url('${imageFile}')`;
+        else if (file.endsWith('.mp3') || file.endsWith('.wav'))
+            fileDiv.style.backgroundImage = `url('${soundFile}')`;
+        else
+            fileDiv.style.backgroundImage = `url('${otherFiles}')`;
 
         if (file.length < 10) {
             fileDiv.textContent = file;
