@@ -13,11 +13,11 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('get-dir', 'arg');
     ipcRenderer.on('dir', (event, dir) => {
         const body = document.querySelector('body');
+        const navigationBar = document.querySelector('.navigationBar');
         const filesField = document.getElementsByClassName('fe-files');
         const rootDir = document.getElementById('dirNameTest');
         var dir_name = dir.split("\\");
         dir_name = dir_name[dir_name.length - 1];
-
 
         rootDir.textContent = dir_name;
         rootDir.id = dir_name;
@@ -53,8 +53,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 // Remove files at the files field
                 removeFiles(filesField[0]);
                 createFiles(dir, filesField[0]);
+
+                // Updates the navigation bar
+                updateNavigationBar(navigationBar, dir);
             }
         });
+
         body.addEventListener('keypress', (event) => {
             if (event.key == 'Enter' && selectedFolder != null) {
                 const folderAt = document.getElementById(path.basename(dir));
@@ -69,6 +73,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 // Remove files at the files field
                 removeFiles(filesField[0]);
                 createFiles(dir, filesField[0]);
+
+                // Updates the navigation bar
+                updateNavigationBar(navigationBar, dir);
                 selectedFolder = null;
             }
         });
@@ -121,6 +128,17 @@ window.addEventListener('DOMContentLoaded', () => {
         collapseList(folder_document);
     });
 });
+
+function updateNavigationBar(navigationBar, dir) {
+    // Updates the navigation bar
+    if (navigationBar.scrollWidth < navigationBar.clientWidth) {
+        navigationBar.value = dir;
+    }
+    else {
+        navigationBar.value = dir;
+        navigationBar.scrollLeft = navigationBar.scrollWidth;
+    }
+}
 
 function updateDirectory(folderName, dir) {
     // Delete the keys for dictionary if too large
