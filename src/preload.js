@@ -7,6 +7,7 @@ const folderSingle = path.join(iconsFolder, 'FolderSingle.svg').replace(/\\/g, '
 const textFile = path.join(iconsFolder, 'txt-file.svg').replace(/\\/g, '/');
 
 var foldersOpened = {};
+var selectedFolder;
 
 window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('get-dir', 'arg');
@@ -24,44 +25,39 @@ window.addEventListener('DOMContentLoaded', () => {
 
         body.addEventListener('click', (event) => {
             const target = event.target;
-            if (target.classList.contains('folder') || target.classList.contains('file-body-f')) {
-
-                // Delete the keys for dictionary if too large
-                if (Object.keys(foldersOpened).length > 30) {
-                    delete foldersOpened[Object.keys(foldersOpened)[0]];
+            if (target.classList.contains('file-body-f')) {
+                if (target.classList.contains('clicked')) {
+                    target.classList.remove('clicked');
+                } else {
+                    if (selectedFolder != target && selectedFolder != null) {
+                        selectedFolder.classList.remove('clicked');
+                    }
+                    target.classList.add('clicked');
+                    selectedFolder = target;
                 }
 
-                // Get folder name
-                var folderName = target.id;
-                console.log(target.id);
-                const folderAt = document.getElementById(folderName);
-                const folderIndex = folderAt.getAttribute('index');
-                const clickedFolder = path.join(dir, folderName);
+                dir = updateDirectory(target.id, dir);
+            }
+            if (target.classList.contains('folder')) {
 
+                dir = updateDirectory(target.id, dir);
 
-                // Set the new directory at
-                if (fs.existsSync(clickedFolder)) {
-                    dir = clickedFolder;
+                // Send a message to collapse or show the new directories inside
+                if (document.getElementById(target.id).childNodes.length < 2) {
+                    ipcRenderer.send('folder-clicked-show', dir);
                 }
                 else {
-                    let dirParent = dir.split("\\").slice(0, folderIndex).join('\\');
-                    dir = path.join(dirParent, folderName);
-                    Object.keys(foldersOpened).forEach((elm) => {
-                        if (fs.existsSync(path.join(elm, folderName))) {
-                            dir = path.join(elm, folderName);
-                        }
-                    })
+                    ipcRenderer.send('folder-clicked-collapse', dir);
                 }
 
-                // Create a key for the directories inside the current directory
-                fs.readdirSync(dir).forEach((elm) => {
-                    if (!foldersOpened.hasOwnProperty(dir))
-                        foldersOpened[dir] = [];
-                    if (!foldersOpened[dir].includes(elm)) {
-                        foldersOpened[dir].push(elm);
-                    }
-                });
-
+                // Remove files at the files field
+                removeFiles(filesField[0]);
+                createFiles(dir, filesField[0]);
+            }
+        });
+        body.addEventListener('keypress', (event) => {
+            if (event.key == 'Enter' && selectedFolder != null) {
+                const folderAt = document.getElementById(path.basename(dir));
                 // Send a message to collapse or show the new directories inside
                 if (folderAt.childNodes.length < 2) {
                     ipcRenderer.send('folder-clicked-show', dir);
@@ -73,6 +69,19 @@ window.addEventListener('DOMContentLoaded', () => {
                 // Remove files at the files field
                 removeFiles(filesField[0]);
                 createFiles(dir, filesField[0]);
+                selectedFolder = null;
+            }
+        });
+        body.addEventListener('mouseover', (event) => {
+            const target = event.target;
+            if (target.classList.contains('file-body-f')) {
+                target.classList.add('selected');
+            }
+        });
+        body.addEventListener('mouseout', (event) => {
+            const target = event.target;
+            if (target.classList.contains('file-body-f')) {
+                target.classList.remove('selected');
             }
         });
 
@@ -107,12 +116,49 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.on('collapse-folders-list', (event, folder_dir) => {
         var folder_name = folder_dir.split("\\");
         folder_name = folder_name[folder_name.length - 1];
-
         let folder_document = document.getElementById(folder_name);
 
         collapseList(folder_document);
     });
 });
+
+function updateDirectory(folderName, dir) {
+    // Delete the keys for dictionary if too large
+    if (Object.keys(foldersOpened).length > 30) {
+        delete foldersOpened[Object.keys(foldersOpened)[0]];
+    }
+
+    // Get folder name
+    const folderAt = document.getElementById(folderName);
+    const folderIndex = folderAt.getAttribute('index');
+    const clickedFolder = path.join(dir, folderName);
+
+
+    // Set the new directory at
+    if (fs.existsSync(clickedFolder)) {
+        dir = clickedFolder;
+    }
+    else {
+        let dirParent = dir.split("\\").slice(0, folderIndex).join('\\');
+        dir = path.join(dirParent, folderName);
+        Object.keys(foldersOpened).forEach((elm) => {
+            if (fs.existsSync(path.join(elm, folderName))) {
+                dir = path.join(elm, folderName);
+            }
+        })
+    }
+
+    // Create a key for the directories inside the current directory
+    fs.readdirSync(dir).forEach((elm) => {
+        if (!foldersOpened.hasOwnProperty(dir))
+            foldersOpened[dir] = [];
+        if (!foldersOpened[dir].includes(elm)) {
+            foldersOpened[dir].push(elm);
+        }
+    });
+
+    return dir;
+}
 
 function updateList(dir, div) {
     let ul = document.createElement('ul');

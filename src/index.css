@@ -19,8 +19,9 @@ body {
   border-right: solid rgb(211, 211, 211) 1px;
   position: relative;
   user-select: none;
+  overflow: auto;
   height: 100%;
-  width: 40%;
+  width: 20%;
 }
 
 .fe-body .dropdown-list:first-child {
@@ -49,6 +50,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   position: relative;
+  overflow-y: scroll;
   align-items: flex-start;
   justify-content: flex-start;
   align-content: flex-start;
@@ -66,14 +68,32 @@ body {
   justify-content: center;
   background-size: 100% 100%;
 }
+
 .file-body-f {
   margin: 3%;
   width: 13%;
-  height: 16%;
+  height: 20%;
+  min-width: 10px;
+  min-height: 80px;
   display: flex;
   cursor: pointer;
+  user-select: none;
   border-radius: 2px;
   align-items: flex-end;
   justify-content: center;
-  background-size: 100% 100%;
+  background-size: 75% 75%;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: solid transparent 1px;
+  transition: background-color 0.3s, border 0.3s;
+}
+
+.file-body-f.selected {
+  background-color: rgba(148, 213, 253, 0.5);
+  border: solid rgba(148, 213, 253, 0.8) 1px;
+}
+
+.file-body-f.clicked {
+  background-color: rgba(148, 213, 253, 0.5);
+  border: solid rgba(148, 213, 253, 0.8) 1px;
 }
