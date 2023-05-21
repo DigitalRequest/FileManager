@@ -48,6 +48,7 @@ body {
   border-radius: 5px;
   position: relative;
   background: none;
+  margin-right: 1%;
   margin-left: 2%;
   padding: 0.1%;
   flex: 1;
@@ -119,10 +120,10 @@ body {
   margin: 3%;
   width: 13%;
   height: 20%;
-  min-width: 10px;
-  min-height: 80px;
   display: flex;
   cursor: pointer;
+  min-width: 10px;
+  min-height: 80px;
   user-select: none;
   border-radius: 2px;
   align-items: flex-end;

@@ -8,7 +8,8 @@ const textFile = path.join(iconsFolder, 'txt-file.svg').replace(/\\/g, '/');
 const imageFile = path.join(iconsFolder, 'ImageFile.svg').replace(/\\/g, '/');
 const soundFile = path.join(iconsFolder, 'MusicFile.svg').replace(/\\/g, '/');
 const otherFiles = path.join(iconsFolder, 'OtherFiles.svg').replace(/\\/g, '/');
-const selectedFolders = [];
+const selectedFiles = [];
+const filesCopying = [];
 
 var foldersOpened = {};
 
@@ -28,12 +29,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
         body.addEventListener('click', (event) => {
             const target = event.target;
-            if (selectedFolders.length > 0 && !event.ctrlKey) {
-                selectedFolders.forEach((folder) => {
+            if (selectedFiles.length > 0 && !event.ctrlKey) {
+                selectedFiles.forEach((folder) => {
                     if (target != folder) {
                         folder.classList.remove('clicked');
                     }
                 });
+                selectedFiles.length = 0;
             }
             if (target.classList.contains('buttonRoot')) {
                 dir = updateDirectory(dir_name, dir);
@@ -53,7 +55,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 } else {
                     // TODO: Error page
                 }
-                console.log(dir);
 
                 // Remove files at the files field
                 removeFiles(filesField[0]);
@@ -67,10 +68,8 @@ window.addEventListener('DOMContentLoaded', () => {
                     target.classList.remove('clicked');
                 } else {
                     target.classList.add('clicked');
-                    selectedFolders.push(target);
+                    selectedFiles.push(target);
                 }
-
-                dir = updateDirectory(target.id, dir);
             }
             if (target.classList.contains('folder')) {
 
@@ -96,7 +95,8 @@ window.addEventListener('DOMContentLoaded', () => {
         body.addEventListener('keypress', (event) => {
             switch (event.key) {
                 case 'Enter':
-                    if (selectedFolders.length > 0 && document.activeElement != navigationBar) {
+                    if (selectedFiles.length > 0 && document.activeElement != navigationBar) {
+                        dir = path.join(dir, selectedFiles[selectedFiles.length-1].id);
                         const folderAt = document.getElementById(path.basename(dir));
                         // Send a message to collapse or show the new directories inside
                         if (folderAt.childNodes.length < 2) {
@@ -112,7 +112,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
                         // Updates the navigation bar
                         updateNavigationBar(navigationBar, dir);
-                        selectedFolders.length = 0;
+                        selectedFiles.length = 0;
                     } else {
                         if (fs.existsSync(navigationBar.value) && fs.lstatSync(navigationBar.value).isDirectory()) {
                             dir = navigationBar.value;
@@ -132,19 +132,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
                             // Updates the navigation bar
                             updateNavigationBar(navigationBar, dir);
-                            selectedFolders.length = 0;
+                            selectedFiles.length = 0;
                         }
                     }
                     break;
             }
         });
-        body.addEventListener('keydown', (event) => {
-            switch (event.key) {
-                case 'c':
-                    if (event.ctrlKey) {
-                        console.log(selectedFolders);
-                    }
-                    break;
+        body.addEventListener('keydown', async (event) => {
+            if (event.ctrlKey) {
+                switch (event.key) {
+                    case 'c':
+                        selectedFiles.forEach((file) => {
+                            filesCopying.push(path.join(dir, file.id));
+                        });
+                        break;
+                    case 'v':
+                        for (const file of filesCopying) {
+                            const fileNewPath = path.join(dir, path.basename(file));
+                            await copyFileAsync(file, fileNewPath);
+                        }
+
+                        filesCopying.length = 0;
+
+                        // Remove files at the files field
+                        removeFiles(filesField[0]);
+                        createFiles(dir, filesField[0]);
+                        break;
+                }
             }
         });
         body.addEventListener('mouseover', (event) => {
@@ -191,6 +205,18 @@ function updateNavigationBar(navigationBar, dir) {
     }
 }
 
+function copyFileAsync(file, fileNewPath) {
+    return new Promise((resolve, reject) => {
+        fs.copyFile(file, fileNewPath, (error) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
 function updateDirectory(folderName, dir) {
     // Delete the keys for dictionary if too large
     if (Object.keys(foldersOpened).length > 30) {
@@ -218,13 +244,15 @@ function updateDirectory(folderName, dir) {
     }
 
     // Create a key for the directories inside the current directory
-    fs.readdirSync(dir).forEach((elm) => {
-        if (!foldersOpened.hasOwnProperty(dir))
-            foldersOpened[dir] = [];
-        if (!foldersOpened[dir].includes(elm)) {
-            foldersOpened[dir].push(elm);
-        }
-    });
+    if (fs.lstatSync(dir).isDirectory()) {
+        fs.readdirSync(dir).forEach((elm) => {
+            if (!foldersOpened.hasOwnProperty(dir))
+                foldersOpened[dir] = [];
+            if (!foldersOpened[dir].includes(elm)) {
+                foldersOpened[dir].push(elm);
+            }
+        });
+    }
 
     return dir;
 }
@@ -259,28 +287,33 @@ function createFiles(dir, fileField) {
         const filePath = path.join(dir, file);
         const fileIndex = filePath.split("\\").length - 1;
         const fileDiv = document.createElement('div');
+        var fileName = file;
 
         fileDiv.setAttribute('class', 'file-body-f');
         fileDiv.setAttribute('id', file.toString());
+
         if (fs.lstatSync(filePath).isDirectory()) {
             fileDiv.setAttribute('index', fileIndex);
-        }
-        if (fs.lstatSync(filePath).isDirectory())
             fileDiv.style.backgroundImage = `url('${folderSingle}')`;
-        else if (file.endsWith('.txt') || file.endsWith('.rtf'))
+        }
+        else if (file.endsWith('.txt') || file.endsWith('.rtf')) {
             fileDiv.style.backgroundImage = `url('${textFile}')`;
-        else if (file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg'))
+        }
+        else if (file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg')) {
             fileDiv.style.backgroundImage = `url('${imageFile}')`;
-        else if (file.endsWith('.mp3') || file.endsWith('.wav'))
+        }
+        else if (file.endsWith('.mp3') || file.endsWith('.wav')) {
             fileDiv.style.backgroundImage = `url('${soundFile}')`;
-        else
-            fileDiv.style.backgroundImage = `url('${otherFiles}')`;
-
-        if (file.length < 10) {
-            fileDiv.textContent = file;
         }
         else {
-            fileDiv.textContent = file.slice(0, 9) + "...";
+            fileDiv.style.backgroundImage = `url('${otherFiles}')`;
+        }
+
+        if (file.length < 15) {
+            fileDiv.textContent = fileName;
+        }
+        else {
+            fileDiv.textContent = fileName.slice(0, 15) + "...";
         }
 
         fileField.appendChild(fileDiv);
