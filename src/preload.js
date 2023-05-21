@@ -8,9 +8,9 @@ const textFile = path.join(iconsFolder, 'txt-file.svg').replace(/\\/g, '/');
 const imageFile = path.join(iconsFolder, 'ImageFile.svg').replace(/\\/g, '/');
 const soundFile = path.join(iconsFolder, 'MusicFile.svg').replace(/\\/g, '/');
 const otherFiles = path.join(iconsFolder, 'OtherFiles.svg').replace(/\\/g, '/');
+const selectedFolders = [];
 
 var foldersOpened = {};
-var selectedFolder;
 
 window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('get-dir', 'arg');
@@ -28,6 +28,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
         body.addEventListener('click', (event) => {
             const target = event.target;
+            if (selectedFolders.length > 0 && !event.ctrlKey) {
+                selectedFolders.forEach((folder) => {
+                    if (target != folder) {
+                        folder.classList.remove('clicked');
+                    }
+                });
+            }
             if (target.classList.contains('buttonRoot')) {
                 dir = updateDirectory(dir_name, dir);
 
@@ -59,11 +66,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (target.classList.contains('clicked')) {
                     target.classList.remove('clicked');
                 } else {
-                    if (selectedFolder != target && selectedFolder != null) {
-                        selectedFolder.classList.remove('clicked');
-                    }
                     target.classList.add('clicked');
-                    selectedFolder = target;
+                    selectedFolders.push(target);
                 }
 
                 dir = updateDirectory(target.id, dir);
@@ -90,28 +94,9 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 
         body.addEventListener('keypress', (event) => {
-            if (event.key == 'Enter') {
-                if (selectedFolder != null && document.activeElement != navigationBar) {
-                    const folderAt = document.getElementById(path.basename(dir));
-                    // Send a message to collapse or show the new directories inside
-                    if (folderAt.childNodes.length < 2) {
-                        ipcRenderer.send('folder-clicked-show', dir);
-                    }
-                    else {
-                        ipcRenderer.send('folder-clicked-collapse', dir);
-                    }
-
-                    // Remove files at the files field
-                    removeFiles(filesField[0]);
-                    createFiles(dir, filesField[0]);
-
-                    // Updates the navigation bar
-                    updateNavigationBar(navigationBar, dir);
-                    selectedFolder = null;
-                } else {
-                    if (fs.existsSync(navigationBar.value) && fs.lstatSync(navigationBar.value).isDirectory()) {
-                        dir = navigationBar.value;
-
+            switch (event.key) {
+                case 'Enter':
+                    if (selectedFolders.length > 0 && document.activeElement != navigationBar) {
                         const folderAt = document.getElementById(path.basename(dir));
                         // Send a message to collapse or show the new directories inside
                         if (folderAt.childNodes.length < 2) {
@@ -127,9 +112,39 @@ window.addEventListener('DOMContentLoaded', () => {
 
                         // Updates the navigation bar
                         updateNavigationBar(navigationBar, dir);
-                        selectedFolder = null;
+                        selectedFolders.length = 0;
+                    } else {
+                        if (fs.existsSync(navigationBar.value) && fs.lstatSync(navigationBar.value).isDirectory()) {
+                            dir = navigationBar.value;
+
+                            const folderAt = document.getElementById(path.basename(dir));
+                            // Send a message to collapse or show the new directories inside
+                            if (folderAt.childNodes.length < 2) {
+                                ipcRenderer.send('folder-clicked-show', dir);
+                            }
+                            else {
+                                ipcRenderer.send('folder-clicked-collapse', dir);
+                            }
+
+                            // Remove files at the files field
+                            removeFiles(filesField[0]);
+                            createFiles(dir, filesField[0]);
+
+                            // Updates the navigation bar
+                            updateNavigationBar(navigationBar, dir);
+                            selectedFolders.length = 0;
+                        }
                     }
-                }
+                    break;
+            }
+        });
+        body.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'c':
+                    if (event.ctrlKey) {
+                        console.log(selectedFolders);
+                    }
+                    break;
             }
         });
         body.addEventListener('mouseover', (event) => {
