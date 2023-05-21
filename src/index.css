@@ -128,7 +128,7 @@ body {
   border-radius: 2px;
   align-items: flex-end;
   justify-content: center;
-  background-size: 70% 70%;
+  background-size: 70% auto;
   background-position: center;
   background-repeat: no-repeat;
   border: solid transparent 1px;
